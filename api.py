@@ -10,7 +10,6 @@ try:
 except KeyError:
     print("Missing API KEYS!")
     exit()
-    pass
 
 client = Client(api_key, api_secret)
 
@@ -19,16 +18,39 @@ klines = client.get_klines(symbol='BTCUSDT', interval=KLINE_INTERVAL_30MINUTE)
 
 # HEADERS
 # 
-print("SYMBOL", "\t", "QTY", "\t", "COST", "\t", "DATE", "\t", "BTC PRICE")
+print(
+    'DATE', ",",
+    'SYMBOL', ",",
+    'QTY', ",",
+    'COST', ",",
+    'BTC PRICE', ",",
+    'USD PRICE', ",",
+    'TOTAL'
+)
+
+symbols = ['IOTABTC', 'LTCBTC', 'ETHBTC']
 
 # TRADE DATA
 # 
-trades = client.get_my_trades(symbol='IOTABTC')
-for trade in trades:
-    btcAvgPrice = 0
-    for kline in klines:
-        if (kline[0] < trade['time'] and kline[6] > trade['time']):
-            btcAvgPrice = ( float(kline[2]) + float(kline[3]) ) / 2
+for symbol in symbols:
+    trades = client.get_my_trades(symbol=symbol)
+    # print(trades)
+    for trade in trades:
+        btcAvgPrice = 0
+        for kline in klines:
+            if (kline[0] < trade['time'] and kline[6] > trade['time']):
+                btcAvgPrice = ( float(kline[2]) + float(kline[3]) ) / 2
 
-    print(trade['commissionAsset'], "\t", trade['qty'], "\t", trade['price'], "\t", ctime(trade['time']/1000), "\t", btcAvgPrice)
-# print(trades)
+        price = -float(trade['price'])
+        if trade['commissionAsset'] == "BTC":
+            price = float(trade['price'])
+
+        print(
+            ctime(trade['time']/1000), ",",
+            trade['commissionAsset'], ",",
+            "%.2f" % float(trade['qty']), ",",
+            price, ",",
+            "%.2f" % btcAvgPrice, ",",
+            ("%.2f" % (price * btcAvgPrice)), ",",
+            "%.2f" % (float(trade['qty']) * price * btcAvgPrice)
+        )
